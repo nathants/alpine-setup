@@ -1,0 +1,17 @@
+#!/bin/bash
+set -xeou pipefail
+
+DEVICE=$DEVICE
+ISO=$ISO
+
+sudo parted --script ${DEVICE} mklabel gpt
+sudo parted --script --align=optimal ${DEVICE} mkpart ESP fat32 1MiB 100%
+sudo parted --script ${DEVICE} set 1 boot on
+
+sudo mkfs.vfat -n ALPINE ${DEVICE}1
+
+sudo mount -t vfat ${DEVICE}1 /mnt
+
+sudo 7z x -tiso -y ${ISO} -o/mnt/
+
+sudo umount /mnt

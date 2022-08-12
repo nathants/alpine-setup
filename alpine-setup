@@ -1,0 +1,715 @@
+#!/bin/bash
+set -xeuo pipefail
+
+# before running this script, add a user and lock the root user
+# - apk add bash sudo
+# - adduser -s /bin/bash $USERNAME
+# - echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# - passwd -l root
+
+# do not run this script via pipe to bash
+if [ ! -t 0 ] ; then
+    echo fatal: do not run via pipe to bash
+    exit 1
+fi
+
+# do not run this script as root
+[ "$(whoami)" != "root" ]
+
+# setup passwordless sudo
+if ! which sudo &>/dev/null; then
+    doas apk update
+    doas apk add sudo
+    echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+fi
+
+# setup sshd
+if ! which ssh &>/dev/null; then
+    /usr/bin/sudo setup-sshd
+fi
+
+# setup xorg base
+if ! which startx &>/dev/null; then
+    /usr/bin/sudo setup-xorg-base
+fi
+
+# setup apk repos
+echo '
+https://dl-cdn.alpinelinux.org/alpine/edge/main
+https://dl-cdn.alpinelinux.org/alpine/edge/community
+https://dl-cdn.alpinelinux.org/alpine/edge/testing
+' | /usr/bin/sudo tee /etc/apk/repositories
+
+# update and upgrade except kernel since /boot needs to move out large files before upgrade
+/usr/bin/sudo apk update
+/usr/bin/sudo apk upgrade -a --ignore 'linux*'
+
+# install packages
+/usr/bin/sudo apk add \
+              abuild \
+              alpine-sdk \
+              acpi \
+              bash \
+              bash-completion \
+              bind-tools \
+              compton \
+              ccache \
+              coreutils \
+              cpupower \
+              curl \
+              dbus-x11 \
+              docker \
+              expect \
+              font-awesome \
+              font-inconsolata-nerd \
+              font-noto-emoji \
+              g++ \
+              gawk \
+              gcc \
+              git \
+              git-diff-highlight \
+              go \
+              gpg \
+              gpg-agent \
+              grep \
+              htop \
+              hunspell \
+              inotify-tools-dev \
+              iproute2-ss \
+              intel-ucode \
+              eudev-dev \
+              libnotify-dev \
+              libusb-dev \
+              libnetfilter_queue-dev \
+              libqrencode \
+              libuser \
+              libx11-dev \
+              libxcursor-dev \
+              libxft-dev \
+              libxi-dev \
+              libxinerama-dev \
+              libxrandr-dev \
+              linux-firmware \
+              linux-headers \
+              lz4 \
+              make \
+              mesa-dri-gallium \
+              musl-dev \
+              ncurses \
+              ncurses-terminfo \
+              net-tools \
+              nftables \
+              npm \
+              patch \
+              pinentry-gtk \
+              procps \
+              py3-virtualenv \
+              python3-dev \
+              ripgrep \
+              rclone \
+              rsync \
+              sed \
+              shadow \
+              the_silver_searcher \
+              thunar \
+              tmux \
+              tree \
+              util-linux \
+              vim \
+              wget \
+              words-en \
+              xclip \
+              xf86-input-libinput \
+              xf86-video-intel \
+              xinit \
+              xinput \
+              xmodmap \
+              xorg-server \
+              xorg-server-dev \
+              xprintidle \
+              xsel \
+              xsetroot \
+              zip
+
+# run sshd and limits bootstraps
+curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
+curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
+
+# setup opt and envs
+mkdir -p ~/opt ~/envs
+
+# setup bashrc
+echo '
+    export GOPATH=~/envs/go
+    export PATH=~/envs/go/bin:$PATH
+    export PATH=~/envs/python3/bin:$PATH
+    export PATH=/usr/local/bin:$PATH
+' > ~/.bashrc
+source ~/.bashrc
+
+# setup bashrc git
+/usr/bin/sudo mkdir -p /usr/share/git/completion
+curl https://raw.githubusercontent.com/git/git/9bf691b78cf906751e65d65ba0c6ffdcd9a5a12c/contrib/completion/git-prompt.sh | /usr/bin/sudo tee /usr/share/git/completion/git-prompt.sh
+
+# setup python3
+if [ ! -d ~/envs/python3 ]; then
+    virtualenv --python=python3 ~/envs/python3
+fi
+
+# check bashrc
+[ "$(which python3)" = "$HOME/envs/python3/bin/python3" ]
+
+# install notify
+pip install git+https://github.com/nathants/notify
+
+# pip installs
+pip install \
+    cython \
+    hidapi \
+    argh \
+    awscli \
+    blessings \
+    flake8 \
+    glances \
+    hypothesis \
+    ipdb \
+    ipython \
+    pillow \
+    psutil \
+    pyquery \
+    pytest \
+    pytz \
+    pyyaml \
+    requests \
+    tornado \
+    tzlocal \
+    urllib3
+
+# install agr
+cd ~/opt
+if [ ! -d agr ]; then
+	git clone https://github.com/nathants/agr
+fi
+cd ~/opt/agr
+python setup.py develop
+
+# install slock
+cd ~/opt
+if [ ! -d slock ]; then
+	git clone https://git.suckless.org/slock
+fi
+cd ~/opt/slock
+git add . && git reset --hard
+git checkout master
+git pull
+git checkout 35633d45672d14bd798c478c45d1a17064701aa9
+agr -y nogroup nobody
+sed -i '/XBell/d' slock.c
+make
+/usr/bin/sudo make install
+
+# install dwm
+cd ~/opt
+if [ ! -d dwm ]; then
+	git clone https://git.suckless.org/dwm
+fi
+cd ~/opt/dwm
+git add . && git reset --hard
+git checkout master
+git pull
+git checkout cb3f58ad06993f7ef3a7d8f61468012e2b786cab
+tmp=$(mktemp)
+cat > $tmp <<'EOF'
+diff --git a/config.def.h b/config.def.h
+index 1c0b587..ef1954f 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -5,17 +5,52 @@ static const unsigned int borderpx  = 1;        /* border pixel of windows */
+ static const unsigned int snap      = 32;       /* snap pixel */
+ static const int showbar            = 1;        /* 0 means no bar */
+ static const int topbar             = 1;        /* 0 means bottom bar */
+-static const char *fonts[]          = { "monospace:size=10" };
+-static const char dmenufont[]       = "monospace:size=10";
++static const char *fonts[]          = { "Inconsolata Nerd Font:size=20" };
++static const char dmenufont[]       = "Inconsolata Nerd Font:size=20";
++
+ static const char col_gray1[]       = "#222222";
+ static const char col_gray2[]       = "#444444";
+ static const char col_gray3[]       = "#bbbbbb";
+ static const char col_gray4[]       = "#eeeeee";
+ static const char col_cyan[]        = "#005577";
+-static const char *colors[][3]      = {
+-	/*               fg         bg         border   */
+-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
+-	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
++static const char col_black[]       = "#000000";
++static const char col_red[]         = "#ff0000";
++static const char col_yellow[]      = "#ffff00";
++static const char col_white[]       = "#ffffff";
++
++   /* solarized dark */
++static const char solarized_black[] = "#073642";  /*  0:     */
++static const char solarized_red[] = "#dc322f";  /*  1:       */
++static const char solarized_green[] = "#859900";  /*  2:     */
++static const char solarized_yellow[] = "#b58900";  /*  3:    */
++static const char solarized_blue[] = "#268bd2";  /*  4:      */
++static const char solarized_magenta[] = "#d33682";  /*  5:   */
++static const char solarized_cyan[] = "#2aa198";  /*  6:      */
++static const char solarized_white[] = "#eee8d5";  /*  7:     */
++static const char solarized_brblack[] = "#002b36";  /*  8:   */
++static const char solarized_brred[] = "#cb4b16";  /*  9:     */
++static const char solarized_brgreen[] = "#586e75";  /* 10:   */
++static const char solarized_bryellow[] = "#657b83";  /* 11:  */
++static const char solarized_brblue[] = "#839496";  /* 12:    */
++static const char solarized_brmagenta[] = "#6c71c4";  /* 13: */
++static const char solarized_brcyan[] = "#93a1a1";  /* 14:    */
++static const char solarized_brwhite[] = "#fdf6e3";  /* 15:   */
++
++static const char *colors[][7]      = {
++	/*					fg         bg          border   */
++	[SchemeNorm] =	 { col_gray3, col_gray1,  col_gray2 },
++	[SchemeSel]  =	 { col_gray4, col_cyan,   col_cyan },
++	[SchemeWarn] =	 { col_black, col_yellow, col_red },
++	[SchemeUrgent]=	 { col_white, col_red,    col_red },
++
++	[SchemeMine1]  =	 { col_gray1, solarized_yellow,   col_gray2 },
++	[SchemeMine2] =	 { col_gray1, solarized_red, col_gray2 },
++	[SchemeMine3]=	 { col_gray1, solarized_blue,    col_gray2 },
++
++	[SchemeMine4]  =	 { col_gray1, solarized_bryellow,   col_gray2 },
++	[SchemeMine5] =	 { col_gray1, solarized_brred, col_gray2 },
++	[SchemeMine6]=	 { col_gray1, solarized_brblue,    col_gray2 },
++
+ };
+
+ /* tagging */
+@@ -28,19 +63,17 @@ static const Rule rules[] = {
+ 	 */
+ 	/* class      instance    title       tags mask     isfloating   monitor */
+ 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
+-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
+ };
+
+ /* layout(s) */
+ static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
+ static const int nmaster     = 1;    /* number of clients in master area */
+-static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
++static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
+
+ static const Layout layouts[] = {
+ 	/* symbol     arrange function */
+-	{ "[]=",      tile },    /* first entry is default */
+-	{ "><>",      NULL },    /* no layout function means floating behavior */
+ 	{ "[M]",      monocle },
++	{ "[]=",      tile },    /* first entry is default */
+ };
+
+ /* key definitions */
+@@ -59,31 +92,62 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn()
+ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+ static const char *termcmd[]  = { "st", NULL };
+
++
++int
++shifttag(int dist)
++{
++	    int i, curtags;
++	        int seltag = 0;
++		    curtags = selmon->tagset[selmon->seltags];
++		        for(i = 0; i < LENGTH(tags); i++) {
++				        if((curtags & (1 << i)) != 0) {
++						            seltag = i;
++							                break;
++									        }
++					    }
++			    seltag = (seltag + dist) % LENGTH(tags);
++			        if(seltag < 0)
++					        seltag += LENGTH(tags);
++				    return 1 << seltag;
++}
++
++void
++cycle(const Arg *arg)
++{
++	    Arg a = { .i = shifttag(arg->i) };
++	        view(&a);
++}
++
++void
++tagcycle(const Arg *arg)
++{
++	    Arg a = { .i = shifttag(arg->i) };
++	        tag(&a);
++		    view(&a);
++}
++
++
++
+ static Key keys[] = {
+ 	/* modifier                     key        function        argument */
+-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
++	{ MODKEY|ShiftMask, XK_p,      spawn,          {.v = dmenucmd } },
+ 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+-	{ MODKEY,                       XK_b,      togglebar,      {0} },
+-	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
+-	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+-	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
+-	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+-	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
+-	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
+-	{ MODKEY,                       XK_Return, zoom,           {0} },
+-	{ MODKEY,                       XK_Tab,    view,           {0} },
++	{ MODKEY|ShiftMask, XK_b,      togglebar,      {0} },
++	{ MODKEY|ShiftMask, XK_j,      focusstack,     {.i = +1 } },
++	{ MODKEY|ShiftMask, XK_k,      focusstack,     {.i = -1 } },
++	{ MODKEY|ShiftMask, XK_h,      cycle,       {.i = -1} },
++	{ MODKEY|ShiftMask, XK_l,      cycle,       {.i = +1} },
++	{ MODKEY|ShiftMask, XK_Return, zoom,           {0} },
++	{ MODKEY, XK_Tab,    view,           {0} },
+ 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+-	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
+-	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
+-	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
+-	{ MODKEY,                       XK_space,  setlayout,      {0} },
++	{ MODKEY|ShiftMask, XK_m,      setlayout,      {.v = &layouts[0]} },
++	{ MODKEY|ShiftMask, XK_t,      setlayout,      {.v = &layouts[1]} },
++	{ MODKEY|ShiftMask, XK_space,  setlayout,      {0} },
+ 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
+-	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
++	{ MODKEY|ShiftMask, XK_0,      view,           {.ui = ~0 } },
+ 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
+-	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
+-	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
+-	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
+-	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
++	{ MODKEY|ShiftMask, XK_o,  focusmon,       {.i = +1 } },
++	{ MODKEY|ShiftMask, XK_i, focusmon,       {.i = -1 } },
+ 	TAGKEYS(                        XK_1,                      0)
+ 	TAGKEYS(                        XK_2,                      1)
+ 	TAGKEYS(                        XK_3,                      2)
+@@ -101,7 +165,6 @@ static Key keys[] = {
+ static Button buttons[] = {
+ 	/* click                event mask      button          function        argument */
+ 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
+-	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
+ 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
+ 	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+ 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
+@@ -112,4 +175,3 @@ static Button buttons[] = {
+ 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
+ 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
+ };
+-
+diff --git a/config.mk b/config.mk
+index 6d36cb7..5d90f0c 100644
+--- a/config.mk
++++ b/config.mk
+@@ -27,7 +27,7 @@ LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS}
+ # flags
+ CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_POSIX_C_SOURCE=2 -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS}
+ #CFLAGS   = -g -std=c99 -pedantic -Wall -O0 ${INCS} ${CPPFLAGS}
+-CFLAGS   = -std=c99 -pedantic -Wall -Wno-deprecated-declarations -Os ${INCS} ${CPPFLAGS}
++CFLAGS   = -std=c99 -pedantic -Wall -Wno-deprecated-declarations -march=native -mtune=native -O3 -flto ${INCS} ${CPPFLAGS}
+ LDFLAGS  = ${LIBS}
+
+ # Solaris
+diff --git a/dwm.c b/dwm.c
+index 4465af1..d7e4a1c 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -59,7 +59,7 @@
+
+ /* enums */
+ enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
+-enum { SchemeNorm, SchemeSel }; /* color schemes */
++enum { SchemeNorm, SchemeSel, SchemeWarn, SchemeUrgent, SchemeMine1, SchemeMine2, SchemeMine3, SchemeMine4, SchemeMine5, SchemeMine6 }; /* color schemes */
+ enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
+        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
+        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
+@@ -701,11 +701,41 @@ drawbar(Monitor *m)
+ 	unsigned int i, occ = 0, urg = 0;
+ 	Client *c;
+
++    char *ts = stext;
++    char *tp = stext;
++    int tx = 0;
++    char ctmp;
++
+ 	/* draw status first so it can be overdrawn by tags later */
+ 	if (m == selmon) { /* status is only drawn on selected monitor */
+ 		drw_setscheme(drw, scheme[SchemeNorm]);
+-		sw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+-		drw_text(drw, m->ww - sw, 0, sw, bh, 0, stext, 0);
++
++        /* Chain length computed between escape sequence which slow down too
++         * much TEXTW function */
++        while(1) {
++            if ((unsigned int)*ts > LENGTH(colors)) { ts++; continue; }
++            ctmp = *ts;
++            *ts = '\0';
++            sw += TEXTW(tp) - lrpad;
++            if (ctmp == '\0') { break; }
++            *ts = ctmp;
++            tp = ++ts;
++        }
++        sw = sw + 2; /* 2px right padding */
++        ts = stext;
++        tp = stext;
++        while (1) {
++            if ((unsigned int)*ts > LENGTH(colors)) { ts++; continue; }
++            ctmp = *ts;
++            *ts = '\0';
++            drw_text(drw, m->ww - sw + tx, 0, sw - tx, bh, 0, tp, 0);
++            tx += TEXTW(tp) -lrpad;
++            if (ctmp == '\0') { break; }
++            drw_setscheme(drw, scheme[(unsigned int)(ctmp-1)]);
++            *ts = ctmp;
++            tp = ++ts;
++        }
++
+ 	}
+
+ 	for (c = m->clients; c; c = c->next) {
+@@ -815,11 +845,12 @@ focusin(XEvent *e)
+ 		setfocus(selmon->sel);
+ }
+
+-void
+-focusmon(const Arg *arg)
+-{
++void focusmon(const Arg *arg) {
++    FILE *fp;
++    fp=fopen("/dev/shm/emacs-save-open-buffer", "w");
++    fprintf(fp, "emacs gonna save after this file is modified\n");
++    fclose(fp);
+ 	Monitor *m;
+-
+ 	if (!mons->next)
+ 		return;
+ 	if ((m = dirtomon(arg->i)) == selmon)
+@@ -829,11 +860,12 @@ focusmon(const Arg *arg)
+ 	focus(NULL);
+ }
+
+-void
+-focusstack(const Arg *arg)
+-{
++void focusstack(const Arg *arg) {
++    FILE *fp;
++    fp=fopen("/dev/shm/emacs-save-open-buffer", "w");
++    fprintf(fp, "emacs gonna save after this file is modified\n");
++    fclose(fp);
+ 	Client *c = NULL, *i;
+-
+ 	if (!selmon->sel)
+ 		return;
+ 	if (arg->i > 0) {
+@@ -2035,6 +2067,10 @@ updatewmhints(Client *c)
+ void
+ view(const Arg *arg)
+ {
++    FILE *fp;
++    fp=fopen("/dev/shm/emacs-save-open-buffer", "w");
++    fprintf(fp, "emacs gonna save after this file is modified\n");
++    fclose(fp);
+ 	if ((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags])
+ 		return;
+ 	selmon->seltags ^= 1; /* toggle sel tagset */
+EOF
+patch -p1 < $tmp
+make clean
+make
+/usr/bin/sudo make install
+
+# install dmenu
+cd ~/opt
+if [ ! -d dmenu ]; then
+	git clone https://git.suckless.org/dmenu
+fi
+cd ~/opt/dmenu
+git add . && git reset --hard
+git checkout master
+git pull
+git checkout 1a13d0465d1a6f4f74bc5b07b04c9bd542f20ba6
+tmp=$(mktemp)
+cat > $tmp <<'EOF'
+diff --git a/config.mk b/config.mk
+index 05d5a3e..744569a 100644
+--- a/config.mk
++++ b/config.mk
+@@ -24,7 +24,7 @@ LIBS = -L$(X11LIB) -lX11 $(XINERAMALIBS) $(FREETYPELIBS)
+
+ # flags
+ CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\" $(XINERAMAFLAGS)
+-CFLAGS   = -std=c99 -pedantic -Wall -Os $(INCS) $(CPPFLAGS)
++CFLAGS   = -std=c99 -pedantic -Wall -O3 -flto -march=native -mtune=native $(INCS) $(CPPFLAGS)
+ LDFLAGS  = $(LIBS)
+
+ # compiler and linker
+
+EOF
+patch -p1 < $tmp
+make clean
+make
+/usr/bin/sudo make install
+
+# install st
+cd ~/opt
+if [ ! -d st ]; then
+	git clone https://git.suckless.org/st
+fi
+cd ~/opt/st
+git add . && git reset --hard
+git checkout master
+git pull
+git checkout 4ef0cbd8b9371f37f7d02ef37b5378b879e6b8bf
+curl https://st.suckless.org/patches/solarized/st-no_bold_colors-0.8.1.diff > st.diff1
+[ 5a6e2b745c7746228e0ee4e84214e3ac7054e6d451bc5843364e878bb2011e3b = $(cat st.diff1 | sha256sum | awk '{print $1}') ]
+git apply st.diff1
+curl https://st.suckless.org/patches/solarized/st-solarized-dark-20180411-041912a.diff > st.diff2
+[ b2d5e88a2616eafb82b2fefb63eecb0f9d71f839349ef40f9f69c1953444f88c = $(cat st.diff2 | sha256sum | awk '{print $1}') ]
+git apply st.diff2
+curl https://st.suckless.org/patches/dynamic-cursor-color/st-dynamic-cursor-color-0.8.4.diff > st.diff3
+[ c942f73cd576c2d275dea21a733bc8bcfe66fb186b86563b03d42a123fbe93b8 = $(cat st.diff3 | sha256sum | awk '{print $1}') ]
+git apply st.diff3
+sed -i '/char \*font/s/.*/char \*font = "Inconsolata Nerd Font:pixelsize=26:style=Bold:antialias=true:autohint=true";/' config.def.h
+sed -i 's/st-256color/st-16color/' config.def.h
+sed -i 's:/bin/sh:/bin/bash:' config.def.h
+sed -i 's:cursorshape = 2:cursorshape = 6:' config.def.h
+tmp=$(mktemp)
+cat > $tmp <<'EOF'
+diff --git a/config.mk b/config.mk
+index c070a4a..cb58ced 100644
+--- a/config.mk
++++ b/config.mk
+@@ -22,7 +22,7 @@ LIBS = -L$(X11LIB) -lm -lrt -lX11 -lutil -lXft \
+
+ # flags
+ STCPPFLAGS = -DVERSION=\"$(VERSION)\" -D_XOPEN_SOURCE=600
+-STCFLAGS = $(INCS) $(STCPPFLAGS) $(CPPFLAGS) $(CFLAGS)
++STCFLAGS = $(INCS) $(STCPPFLAGS) $(CPPFLAGS) -O3 -flto -march=native -mtune=native
+ STLDFLAGS = $(LIBS) $(LDFLAGS)
+
+ # OpenBSD:
+
+EOF
+patch -p1 < $tmp
+make clean
+make
+/usr/bin/sudo make install
+
+# setup usb udev
+echo 'SUBSYSTEM=="usb", MODE="0666"' | /usr/bin/sudo tee /etc/udev/rules.d/usb.rules
+
+# setup abuild
+/usr/bin/sudo addgroup $USER abuild
+
+# setup xorg
+/usr/bin/sudo addgroup $USER video
+/usr/bin/sudo addgroup $USER input
+if ! cat /etc/X11/xorg.conf | grep DontZap; then
+echo '
+Section "ServerFlags"
+    Option "DontVTSwitch" "True"
+    Option "DontZap"      "True"
+EndSection
+' | /usr/bin/sudo tee -a /etc/X11/xorg.conf
+fi
+
+# setup gpg notifier
+echo '#!/bin/bash
+set -euo pipefail
+now() {
+    date -d "${1:-0} minute ago" +"%Y-%m-%dT%H:%M"
+}
+last_1_minutes="$(for i in {0..0}; do now $i; done)"
+auth_file=/tmp/gpg.auth
+touch $auth_file
+if [ root != "$(whoami)" ]; then
+    cmdline="$(ps -o cmd -p $PPID --no-header)"
+    auth_log="$(cat $auth_file | grep -f <(echo "$last_1_minutes") || true)"
+    echo "$auth_log" > $auth_file
+    if cat $auth_file | grep "${cmdline}$" &>/dev/null; then
+      echo gpg invoked: "$@" 1>&2
+      /usr/bin/gpg "$@"
+    elif st notify -p "gpg: $cmdline"; then
+      echo $(now) "$cmdline" >> $auth_file
+      echo gpg invoked: "$@" 1>&2
+      /usr/bin/gpg "$@"
+    else
+      echo fatal: gpg access denied by user prompt
+      exit 1
+    fi
+else
+    echo gpg invoked: "$@" 1>&2
+    /usr/bin/gpg "$@"
+fi
+' | /usr/bin/sudo tee /usr/local/bin/gpg
+/usr/bin/sudo cp /usr/local/bin/gpg /usr/local/bin/gpg2
+/usr/bin/sudo chmod +x /usr/local/bin/gpg
+/usr/bin/sudo chmod +x /usr/local/bin/gpg2
+
+# setup sudo notifier
+echo '#!/bin/bash
+set -euo pipefail
+now() {
+    date -d "${1:-0} minute ago" +"%Y-%m-%dT%H:%M"
+}
+last_1_minutes="$(for i in {0..0}; do now $i; done)"
+auth_file=/tmp/sudo.auth
+touch $auth_file
+if [ root != "$(whoami)" ]; then
+    cmdline="$(ps -o cmd -p $PPID --no-header)"
+    auth_log="$(cat $auth_file | grep -f <(echo "$last_1_minutes") || true)"
+    echo "$auth_log" > $auth_file
+    if cat $auth_file | grep "${cmdline}$" &>/dev/null; then
+      echo sudo invoked: "$@" 1>&2
+      /usr/bin/sudo "$@"
+    elif st notify -p "sudo: $cmdline" &>/dev/null; then
+      echo $(now) "$cmdline" >> $auth_file
+      echo sudo invoked: "$@" 1>&2
+      /usr/bin/sudo "$@"
+    else
+      echo fatal: sudo access denied by user prompt
+      exit 1
+    fi
+else
+    echo sudo invoked: "$@" 1>&2
+    /usr/bin/sudo "$@"
+fi
+' | /usr/bin/sudo tee /usr/local/bin/sudo
+/usr/bin/sudo chmod +x /usr/local/bin/sudo
+
+# setup xmodmap
+echo '
+! capslock to alt
+clear Lock
+keycode 0x42 = Meta_L
+
+! ctrl/win/alt -> ctrl/alt/ctrl
+clear control
+clear mod1
+clear mod4
+keycode 37  = Control_L
+keycode 64  = Control_L
+keycode 133 = Alt_L Meta_L
+add control = Control_L Control_R
+add mod1 = Alt_L Meta_L
+add mod4 = Super_L Super_R
+' > ~/.xmodmap
+
+# setup xinitrc
+echo '
+ xmodmap ~/.xmodmap
+ exec dwm
+' > ~/.xinitrc
+
+# setup suspend on lid close
+/usr/bin/sudo mkdir -p /etc/acpi/LID
+echo "#!/bin/sh
+su $USER -c slock &
+echo mem > /sys/power/state
+" | /usr/bin/sudo tee /etc/acpi/LID/00000080
+/usr/bin/sudo chmod +x /etc/acpi/LID/00000080
+
+echo logout and login again to update groups, then run startx

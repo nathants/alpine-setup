@@ -1,0 +1,20 @@
+#!/bin/bash
+set -eou pipefail
+
+DEVICE=$DEVICE
+
+echo '
+https://dl-cdn.alpinelinux.org/alpine/edge/main
+https://dl-cdn.alpinelinux.org/alpine/edge/community
+https://dl-cdn.alpinelinux.org/alpine/edge/testing
+' > /etc/apk/repositories
+
+setup-alpine -q
+
+setup-disk \
+    -v \
+    -s 0 \
+    -k edge \
+    -e \
+    -m sys \
+    $DEVICE
