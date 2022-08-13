@@ -132,8 +132,9 @@ https://dl-cdn.alpinelinux.org/alpine/edge/testing
               zip
 
 # run sshd and limits bootstraps
-curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
+curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
+sudo rc-service sshd restart
 
 # setup opt and envs
 mkdir -p ~/opt ~/envs
