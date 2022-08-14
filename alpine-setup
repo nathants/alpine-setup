@@ -63,6 +63,7 @@ https://dl-cdn.alpinelinux.org/alpine/edge/testing
               font-awesome \
               font-inconsolata-nerd \
               font-noto-emoji \
+              firefox \
               g++ \
               gawk \
               gcc \
