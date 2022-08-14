@@ -132,6 +132,13 @@ https://dl-cdn.alpinelinux.org/alpine/edge/testing
               xsetroot \
               zip
 
+# update to latest nerd font inconsolata since 2.1.0 has bugs
+cd /usr/share/fonts/inconsolata-nerd
+/usr/bin/sudo rm -v *
+/usr/bin/sudo wget https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Inconsolata.zip
+/usr/bin/sudo unzip
+/usr/bin/sudo rm -v Inconsolata.zip
+
 # run sshd and limits bootstraps
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
