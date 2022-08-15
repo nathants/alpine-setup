@@ -133,6 +133,7 @@ https://dl-cdn.alpinelinux.org/alpine/edge/testing
               xprintidle \
               xsel \
               xsetroot \
+              wireguard-tools \
               zip
 
 # install nerd font inconsolata
