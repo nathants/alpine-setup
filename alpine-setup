@@ -18,15 +18,6 @@ if [ ! -t 0 ] ; then
     exit 1
 fi
 
-
-
-# setup passwordless sudo
-if ! which sudo &>/dev/null; then
-    doas apk update
-    doas apk add sudo
-    echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-fi
-
 # setup sshd
 if ! which ssh &>/dev/null; then
     /usr/bin/sudo setup-sshd
@@ -44,9 +35,12 @@ https://dl-cdn.alpinelinux.org/alpine/edge/community
 https://dl-cdn.alpinelinux.org/alpine/edge/testing
 ' | /usr/bin/sudo tee /etc/apk/repositories
 
-# update and upgrade except kernel since /boot needs to move out large files before upgrade
-/usr/bin/sudo apk update
-/usr/bin/sudo apk upgrade -a --ignore 'linux*'
+
+# on first run, update and upgrade except kernel since /boot needs to move out large files before upgrade
+if [ ! -f ~/.bashrc ]; then
+    /usr/bin/sudo apk update
+    /usr/bin/sudo apk upgrade -a --ignore linux*
+fi
 
 # install packages
 /usr/bin/sudo apk add \
@@ -141,13 +135,15 @@ https://dl-cdn.alpinelinux.org/alpine/edge/testing
               zip
 
 # install nerd font inconsolata
-/usr/bin/sudo mkdir -p /usr/share/fonts/inconsolata-nerd
-cd /usr/share/fonts/inconsolata-nerd
-/usr/bin/sudo rm -fv *
-/usr/bin/sudo wget https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Inconsolata.zip
-/usr/bin/sudo unzip Inconsolata.zip
-/usr/bin/sudo rm -v Inconsolata.zip
-fc-cache -rfv
+if [ ! -d /usr/share/fonts/inconsolata-nerd ]; then
+    /usr/bin/sudo mkdir -p /usr/share/fonts/inconsolata-nerd
+    cd /usr/share/fonts/inconsolata-nerd
+    /usr/bin/sudo rm -fv *
+    /usr/bin/sudo wget https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Inconsolata.zip
+    /usr/bin/sudo unzip Inconsolata.zip
+    /usr/bin/sudo rm -v Inconsolata.zip
+    fc-cache -rfv
+fi
 
 # run sshd and limits bootstraps
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
@@ -157,18 +153,22 @@ curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/boots
 # setup opt and envs
 mkdir -p ~/opt ~/envs
 
-# setup bashrc
-echo '
-    export GOPATH=~/envs/go
-    export PATH=~/envs/go/bin:$PATH
-    export PATH=~/envs/python3/bin:$PATH
-    export PATH=/usr/local/bin:$PATH
-' > ~/.bashrc
-source ~/.bashrc
+# on first run setup bashrc
+if [ ! -f ~/.bashrc ]; then
+    echo '
+        export GOPATH=~/envs/go
+        export PATH=~/envs/go/bin:$PATH
+        export PATH=~/envs/python3/bin:$PATH
+        export PATH=/usr/local/bin:$PATH
+    ' > ~/.bashrc
+    source ~/.bashrc
+fi
 
 # setup bashrc git
-/usr/bin/sudo mkdir -p /usr/share/git/completion
-curl https://raw.githubusercontent.com/git/git/9bf691b78cf906751e65d65ba0c6ffdcd9a5a12c/contrib/completion/git-prompt.sh | /usr/bin/sudo tee /usr/share/git/completion/git-prompt.sh
+if [ ! -f /usr/share/git/completion/git-prompt.sh ]; then
+    /usr/bin/sudo mkdir -p /usr/share/git/completion
+    curl https://raw.githubusercontent.com/git/git/9bf691b78cf906751e65d65ba0c6ffdcd9a5a12c/contrib/completion/git-prompt.sh | /usr/bin/sudo tee /usr/share/git/completion/git-prompt.sh
+fi
 
 # setup python3
 if [ ! -d ~/envs/python3 ]; then
@@ -179,7 +179,9 @@ fi
 [ "$(which python3)" = "$HOME/envs/python3/bin/python3" ]
 
 # install notify
-pip install git+https://github.com/nathants/notify
+if ! which notify &>/dev/null; then
+    pip install git+https://github.com/nathants/notify
+fi
 
 # pip installs
 pip install \
@@ -220,7 +222,6 @@ fi
 cd ~/opt/slock
 git add . && git reset --hard
 git checkout master
-git pull
 git checkout 35633d45672d14bd798c478c45d1a17064701aa9
 agr -y nogroup nobody
 sed -i '/XBell/d' slock.c
@@ -235,7 +236,6 @@ fi
 cd ~/opt/dwm
 git add . && git reset --hard
 git checkout master
-git pull
 git checkout cb3f58ad06993f7ef3a7d8f61468012e2b786cab
 tmp=$(mktemp)
 cat > $tmp <<'EOF'
@@ -548,7 +548,6 @@ fi
 cd ~/opt/dmenu
 git add . && git reset --hard
 git checkout master
-git pull
 git checkout 1a13d0465d1a6f4f74bc5b07b04c9bd542f20ba6
 tmp=$(mktemp)
 cat > $tmp <<'EOF'
@@ -580,18 +579,23 @@ fi
 cd ~/opt/st
 git add . && git reset --hard
 git checkout master
-git pull
 git checkout 4ef0cbd8b9371f37f7d02ef37b5378b879e6b8bf
-curl https://st.suckless.org/patches/solarized/st-no_bold_colors-0.8.1.diff > st.diff1
-[ 5a6e2b745c7746228e0ee4e84214e3ac7054e6d451bc5843364e878bb2011e3b = $(cat st.diff1 | sha256sum | awk '{print $1}') ]
-git apply st.diff1
-curl https://st.suckless.org/patches/solarized/st-solarized-dark-20180411-041912a.diff > st.diff2
-[ b2d5e88a2616eafb82b2fefb63eecb0f9d71f839349ef40f9f69c1953444f88c = $(cat st.diff2 | sha256sum | awk '{print $1}') ]
-git apply st.diff2
-curl https://st.suckless.org/patches/dynamic-cursor-color/st-dynamic-cursor-color-0.8.4.diff > st.diff3
-[ c942f73cd576c2d275dea21a733bc8bcfe66fb186b86563b03d42a123fbe93b8 = $(cat st.diff3 | sha256sum | awk '{print $1}') ]
-git apply st.diff3
-sed -i '/char \*font/s/.*/char \*font = "Inconsolata Nerd Font:pixelsize=26:style=Bold:antialias=true:autohint=true";/' config.def.h
+if [ ! -f ../st.diff1 ]; then
+    curl https://st.suckless.org/patches/solarized/st-no_bold_colors-0.8.1.diff > ../st.diff1
+fi
+[ 5a6e2b745c7746228e0ee4e84214e3ac7054e6d451bc5843364e878bb2011e3b = $(cat ../st.diff1 | sha256sum | awk '{print $1}') ]
+git apply ../st.diff1
+if [ ! -f ../st.diff2 ]; then
+    curl https://st.suckless.org/patches/solarized/st-solarized-dark-20180411-041912a.diff > ../st.diff2
+fi
+[ b2d5e88a2616eafb82b2fefb63eecb0f9d71f839349ef40f9f69c1953444f88c = $(cat ../st.diff2 | sha256sum | awk '{print $1}') ]
+git apply ../st.diff2
+if [ ! -f ../st.diff3 ]; then
+    curl https://st.suckless.org/patches/dynamic-cursor-color/st-dynamic-cursor-color-0.8.4.diff > ../st.diff3
+fi
+[ c942f73cd576c2d275dea21a733bc8bcfe66fb186b86563b03d42a123fbe93b8 = $(cat ../st.diff3 | sha256sum | awk '{print $1}') ]
+git apply ../st.diff3
+sed -i '/char \*font/s/.*/char \*font = "Inconsolata Nerd Font:pixelsize=28:style=Bold:antialias=true:autohint=true";/' config.def.h
 sed -i 's/st-256color/st-16color/' config.def.h
 sed -i 's:/bin/sh:/bin/bash:' config.def.h
 sed -i 's:cursorshape = 2:cursorshape = 6:' config.def.h
@@ -704,7 +708,6 @@ echo '
 ! capslock to alt
 clear Lock
 keycode 0x42 = Meta_L
-
 ! ctrl/win/alt -> ctrl/alt/ctrl
 clear control
 clear mod1
