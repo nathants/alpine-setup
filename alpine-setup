@@ -1,11 +1,16 @@
 #!/bin/bash
 set -xeuo pipefail
 
-# before running this script, add a user and lock the root user
-# - apk add bash sudo
-# - adduser -s /bin/bash $USERNAME
-# - echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-# - passwd -l root
+# do not run as root
+if [ "$(whoami)" = "root" ]; then
+    echo ' before running this script, add a user and lock the root user'
+    echo ' - apk add bash sudo'
+    echo ' - adduser -s /bin/bash $USERNAME'
+    echo ' - echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers'
+    echo ' - passwd -l root'
+    echo ' - exit # and login as the new user'
+    exit 1
+fi
 
 # do not run this script via pipe to bash
 if [ ! -t 0 ] ; then
@@ -13,8 +18,7 @@ if [ ! -t 0 ] ; then
     exit 1
 fi
 
-# do not run this script as root
-[ "$(whoami)" != "root" ]
+
 
 # setup passwordless sudo
 if ! which sudo &>/dev/null; then
