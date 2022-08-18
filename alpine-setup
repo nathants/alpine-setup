@@ -1,5 +1,5 @@
 #!/bin/bash
-set -xeuo pipefail
+set -euo pipefail
 
 # do not run as root
 if [ "$(whoami)" = "root" ]; then
@@ -11,6 +11,8 @@ if [ "$(whoami)" = "root" ]; then
     echo ' - exit # and login as the new user'
     exit 1
 fi
+
+set -x
 
 # do not run this script via pipe to bash
 if [ ! -t 0 ] ; then
