@@ -732,9 +732,11 @@ echo '
 # setup suspend on lid close
 /usr/bin/sudo mkdir -p /etc/acpi/LID
 echo "#!/bin/sh
-su $USER -c slock &
+DISPLAY=:0 su $USER -c slock &
 echo mem > /sys/power/state
 " | /usr/bin/sudo tee /etc/acpi/LID/00000080
 /usr/bin/sudo chmod +x /etc/acpi/LID/00000080
+/usr/bin/sudo rc-service acpid restart
+/usr/bin/sudo rc-update add acpid
 
 echo logout and login again to update groups, then run startx
