@@ -67,6 +67,7 @@ fi
               font-noto-emoji \
               font-noto-extra \
               firefox \
+              findutils \
               g++ \
               gawk \
               gcc \
