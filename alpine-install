@@ -11,6 +11,7 @@ https://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 setup-alpine -q
 
+export BOOT_SIZE=128
 setup-disk \
     -v \
     -s 0 \
