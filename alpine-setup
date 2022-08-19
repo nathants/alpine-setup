@@ -181,11 +181,6 @@ fi
 # check bashrc
 [ "$(which python3)" = "$HOME/envs/python3/bin/python3" ]
 
-# install notify
-if ! which notify &>/dev/null; then
-    pip install git+https://github.com/nathants/notify
-fi
-
 # pip installs
 pip install \
     cython \
@@ -209,13 +204,22 @@ pip install \
     tzlocal \
     urllib3
 
+# install notify
+cd ~/opt
+if [ ! -d notify ]; then
+    git clone https://github.com/nathants/notify
+    cd ~/opt/notify
+    python setup.py develop
+fi
+
+
 # install agr
 cd ~/opt
 if [ ! -d agr ]; then
 	git clone https://github.com/nathants/agr
+    cd ~/opt/agr
+    python setup.py develop
 fi
-cd ~/opt/agr
-python setup.py develop
 
 # install slock
 cd ~/opt
