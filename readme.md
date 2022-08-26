@@ -12,7 +12,7 @@ bootstrapping a new laptop should be easy.
 2. [alpine-install](./alpine-install):
    - boot into the usb drive.
    - login as root with empty password.
-   - run [alpine-install](./alpine-install)`.
+   - run [alpine-install](./alpine-install).
 
 3. [alpine-setup](./alpine-setup):
    - reboot into the installed system.
