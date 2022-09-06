@@ -12,6 +12,8 @@ bootstrapping a new laptop should be easy.
 2. [alpine-install](./alpine-install):
    - boot into the usb drive.
    - login as root with empty password.
+   - run `setup-interfaces` to get online.
+   - run `setup-apkrepos` and possibly edit `/etc/apk/repositories`.
    - run [alpine-install](./alpine-install).
 
 3. [alpine-setup](./alpine-setup):

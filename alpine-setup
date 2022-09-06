@@ -55,6 +55,7 @@ if [ ! -f ~/.bashrc ]; then
                   bind-tools \
                   compton \
                   ccache \
+                  ccls \
                   coreutils \
                   cpupower \
                   curl \
@@ -75,8 +76,7 @@ if [ ! -f ~/.bashrc ]; then
                   git \
                   git-diff-highlight \
                   go \
-                  gpg \
-                  gpg-agent \
+                  gnupg \
                   grep \
                   htop \
                   hunspell \
@@ -89,6 +89,7 @@ if [ ! -f ~/.bashrc ]; then
                   libnetfilter_queue-dev \
                   libqrencode \
                   libuser \
+                  libsodium-dev \
                   libx11-dev \
                   libxcursor-dev \
                   libxft-dev \
@@ -113,6 +114,7 @@ if [ ! -f ~/.bashrc ]; then
                   procps \
                   py3-virtualenv \
                   python3-dev \
+                  redshift \
                   ripgrep \
                   rclone \
                   rsync \
@@ -135,6 +137,7 @@ if [ ! -f ~/.bashrc ]; then
                   xorg-server \
                   xorg-server-dev \
                   xprintidle \
+                  xrandr \
                   xsel \
                   xsetroot \
                   wireguard-tools \
@@ -155,7 +158,7 @@ fi
 # run sshd and limits bootstraps
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
-/usr/bin/sudo rc-service sshd restart
+/usr/bin/sudo rc-service sshd stop
 
 # setup opt and envs
 mkdir -p ~/opt ~/envs
@@ -185,6 +188,13 @@ fi
 # check bashrc
 [ "$(which python3)" = "$HOME/envs/python3/bin/python3" ]
 
+# go installs
+go install golang.org/x/vuln/cmd/govulncheck@latest
+go install golang.org/x/tools/gopls@latest
+go install github.com/rogpeppe/godef@latest
+go install github.com/kisielk/errcheck@latest
+go install honnef.co/go/tools/cmd/staticcheck@latest
+
 # pip installs
 pip install \
     cython \
@@ -197,6 +207,9 @@ pip install \
     hypothesis \
     ipdb \
     ipython \
+    imapclient \
+    imbox \
+    pager \
     pillow \
     psutil \
     pyquery \
