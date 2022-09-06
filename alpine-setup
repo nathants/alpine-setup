@@ -20,6 +20,16 @@ if [ ! -t 0 ] ; then
     exit 1
 fi
 
+# setup hostname
+if [ "$(cat /etc/hostname)" = "alpine" ]; then
+    /usr/bin/sudo setup-hostname
+fi
+
+# setup timezone
+if [ ! -f /etc/localtime ]; then
+    /usr/bin/sudo setup-timezone
+fi
+
 # setup sshd
 if ! which ssh &>/dev/null; then
     /usr/bin/sudo setup-sshd
