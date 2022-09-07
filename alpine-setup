@@ -111,6 +111,7 @@ if [ ! -f ~/.bashrc ]; then
                   linux-edge \
                   linux-lts \
                   lz4 \
+                  maim \
                   make \
                   mesa-dri-gallium \
                   musl-dev \
