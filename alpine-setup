@@ -172,6 +172,9 @@ curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/boots
 curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
 /usr/bin/sudo rc-service sshd stop
 
+# set cgroups v2
+set-opt /etc/rc.conf rc_cgroup_mode= '"unified"'
+
 # setup opt and envs
 mkdir -p ~/opt ~/envs
 
