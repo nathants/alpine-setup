@@ -71,6 +71,7 @@ if [ ! -f ~/.bashrc ]; then
                   curl \
                   dbus-x11 \
                   docker \
+                  entr \
                   expect \
                   ttf-font-awesome \
                   ttf-inconsolata \
