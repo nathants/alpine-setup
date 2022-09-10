@@ -95,6 +95,7 @@ if [ ! -f ~/.bashrc ]; then
                   iproute2-ss \
                   intel-ucode \
                   eudev-dev \
+                  libfido2-dev \
                   libnotify-dev \
                   libusb-dev \
                   libnetfilter_queue-dev \
@@ -134,7 +135,6 @@ if [ ! -f ~/.bashrc ]; then
                   shadow \
                   the_silver_searcher \
                   thunar \
-                  tmux \
                   tree \
                   util-linux \
                   vim \
@@ -230,10 +230,12 @@ pip install \
     psutil \
     pyquery \
     pytest \
+    pytest-xdist \
     pytz \
     pyyaml \
     requests \
     tornado \
+    tox \
     tzlocal \
     urllib3
 
@@ -666,6 +668,9 @@ echo 'SUBSYSTEM=="usb", MODE="0666"' | /usr/bin/sudo tee /etc/udev/rules.d/usb.r
 
 # setup abuild
 /usr/bin/sudo addgroup $USER abuild
+
+# setup plugdev
+/usr/bin/sudo addgroup $USER plugdev
 
 # setup xorg
 /usr/bin/sudo addgroup $USER video
