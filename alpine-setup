@@ -247,7 +247,6 @@ if [ ! -d notify ]; then
     python setup.py develop
 fi
 
-
 # install agr
 cd ~/opt
 if [ ! -d agr ]; then
@@ -781,4 +780,7 @@ echo mem > /sys/power/state
 /usr/bin/sudo rc-service acpid restart
 /usr/bin/sudo rc-update add acpid
 
-echo logout and login again to update groups, then run startx
+# clear motd
+echo | /usr/bin/sudo tee /etc/motd
+
+echo reboot, login, startx
