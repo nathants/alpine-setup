@@ -94,6 +94,7 @@ if [ ! -f ~/.bashrc ]; then
                   inotify-tools-dev \
                   iproute2-ss \
                   intel-ucode \
+                  iw \
                   eudev-dev \
                   libfido2-dev \
                   libnotify-dev \
