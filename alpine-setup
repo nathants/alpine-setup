@@ -128,10 +128,12 @@ if [ ! -f ~/.bashrc ]; then
                   procps \
                   py3-virtualenv \
                   python3-dev \
+                  pciutils \
                   redshift \
                   ripgrep \
                   rclone \
                   rsync \
+                  sysfsutils \
                   sed \
                   shadow \
                   the_silver_searcher \
