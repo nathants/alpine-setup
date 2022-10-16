@@ -60,6 +60,7 @@ if [ ! -f ~/.bashrc ]; then
                   abuild \
                   alpine-sdk \
                   acpi \
+                  android-tools \
                   bash \
                   bash-completion \
                   bind-tools \
