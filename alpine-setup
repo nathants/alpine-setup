@@ -58,61 +58,58 @@ fi
 if [ ! -f ~/.bashrc ]; then
     /usr/bin/sudo apk add \
                   abuild \
-                  alpine-sdk \
                   acpi \
+                  alpine-sdk \
                   android-tools \
                   bash \
                   bash-completion \
                   bind-tools \
-                  compton \
                   ccache \
                   ccls \
+                  compton \
                   coreutils \
                   cpupower \
                   curl \
                   dbus-x11 \
                   docker \
                   entr \
+                  eudev-dev \
                   expect \
-                  ttf-font-awesome \
-                  ttf-inconsolata \
-                  ttf-dejavu \
+                  findutils \
+                  firefox \
                   font-awesome \
                   font-noto-emoji \
                   font-noto-extra \
-                  firefox \
-                  findutils \
                   g++ \
                   gawk \
                   gcc \
                   git \
                   git-diff-highlight \
-                  go \
                   gnupg \
+                  go \
                   grep \
                   htop \
                   hunspell \
                   inotify-tools-dev \
-                  iproute2-ss \
                   intel-ucode \
+                  iproute2-ss \
                   iw \
-                  eudev-dev \
                   libfido2-dev \
-                  libnotify-dev \
-                  libusb-dev \
                   libnetfilter_queue-dev \
+                  libnotify-dev \
                   libqrencode \
-                  libuser \
                   libsodium-dev \
+                  libusb-dev \
+                  libuser \
                   libx11-dev \
                   libxcursor-dev \
                   libxft-dev \
                   libxi-dev \
                   libxinerama-dev \
                   libxrandr-dev \
+                  linux-edge \
                   linux-firmware \
                   linux-headers \
-                  linux-edge \
                   linux-lts \
                   lz4 \
                   maim \
@@ -124,25 +121,32 @@ if [ ! -f ~/.bashrc ]; then
                   net-tools \
                   nftables \
                   npm \
+                  openjdk19-jdk \
                   patch \
+                  pciutils \
                   pinentry-gtk \
                   procps \
+                  py3-matplotlib \
+                  py3-pandas \
                   py3-virtualenv \
                   python3-dev \
-                  pciutils \
+                  rclone \
                   redshift \
                   ripgrep \
-                  rclone \
                   rsync \
-                  sysfsutils \
                   sed \
                   shadow \
+                  sysfsutils \
                   the_silver_searcher \
                   thunar \
                   tree \
+                  ttf-dejavu \
+                  ttf-font-awesome \
+                  ttf-inconsolata \
                   util-linux \
                   vim \
                   wget \
+                  wireguard-tools \
                   words-en \
                   xclip \
                   xf86-input-libinput \
@@ -157,7 +161,6 @@ if [ ! -f ~/.bashrc ]; then
                   xsel \
                   xsetroot \
                   xz \
-                  wireguard-tools \
                   zip
 fi
 
