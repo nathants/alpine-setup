@@ -176,12 +176,16 @@ if [ ! -d /usr/share/fonts/inconsolata-nerd ]; then
 fi
 
 # run sshd and limits bootstraps
-curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
-curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
-/usr/bin/sudo rc-service sshd stop
+if [ ! -f ~/.bashrc ]; then
+    curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
+    curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
+    /usr/bin/sudo rc-service sshd stop
+fi
 
 # set cgroups v2
-set-opt /etc/rc.conf rc_cgroup_mode= '"unified"'
+if [ ! -f ~/.bashrc ]; then
+    set-opt /etc/rc.conf rc_cgroup_mode= '"unified"'
+fi
 
 # setup opt and envs
 mkdir -p ~/opt ~/envs
@@ -269,6 +273,7 @@ if [ ! -d slock ]; then
 fi
 cd ~/opt/slock
 git add . && git reset --hard
+git fetch origin master
 git checkout master
 git checkout 35633d45672d14bd798c478c45d1a17064701aa9
 agr -y nogroup nobody
@@ -283,6 +288,7 @@ if [ ! -d dwm ]; then
 fi
 cd ~/opt/dwm
 git add . && git reset --hard
+git fetch origin master
 git checkout master
 git checkout cb3f58ad06993f7ef3a7d8f61468012e2b786cab
 tmp=$(mktemp)
@@ -595,6 +601,7 @@ if [ ! -d dmenu ]; then
 fi
 cd ~/opt/dmenu
 git add . && git reset --hard
+git fetch origin master
 git checkout master
 git checkout 1a13d0465d1a6f4f74bc5b07b04c9bd542f20ba6
 tmp=$(mktemp)
@@ -626,6 +633,7 @@ if [ ! -d st ]; then
 fi
 cd ~/opt/st
 git add . && git reset --hard
+git fetch origin master
 git checkout master
 git checkout 4ef0cbd8b9371f37f7d02ef37b5378b879e6b8bf
 if [ ! -f ../st.diff1 ]; then
