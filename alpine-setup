@@ -90,6 +90,7 @@ if [ ! -f ~/.bashrc ]; then
                   grep \
                   htop \
                   hunspell \
+                  hunspell-en \
                   inotify-tools-dev \
                   intel-ucode \
                   iproute2-ss \
