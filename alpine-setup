@@ -95,6 +95,7 @@ if [ ! -f ~/.bashrc ]; then
                   intel-ucode \
                   iproute2-ss \
                   iw \
+                  jq \
                   libfido2-dev \
                   libnetfilter_queue-dev \
                   libnotify-dev \
