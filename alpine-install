@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eou pipefail
 
-DEVICE=$DEVICE
+DEVICE=$DEVICE # /dev/nvme0n1
+KERNEL=$KERNEL # lts | edge
 
 echo '
 https://dl-cdn.alpinelinux.org/alpine/edge/main
@@ -15,7 +16,7 @@ export BOOT_SIZE=128
 setup-disk \
     -v \
     -s 0 \
-    -k edge \
+    -k $KERNEL \
     -e \
     -m sys \
     $DEVICE
