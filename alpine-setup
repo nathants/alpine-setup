@@ -35,6 +35,11 @@ if ! which ssh &>/dev/null; then
     /usr/bin/sudo setup-sshd
 fi
 
+# setup ntp
+if ! which chronyd &>/dev/null; then
+    /usr/bin/sudo setup-ntp chrony
+fi
+
 # setup xorg base
 if ! which startx &>/dev/null; then
     /usr/bin/sudo setup-xorg-base
