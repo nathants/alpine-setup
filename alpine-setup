@@ -138,6 +138,7 @@ if [ ! -f ~/.bashrc ]; then
                   py3-pandas \
                   py3-virtualenv \
                   python3-dev \
+                  rust-analyzer \
                   rclone \
                   redshift \
                   ripgrep \
