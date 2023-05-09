@@ -807,4 +807,6 @@ echo mem > /sys/power/state
 # clear motd
 echo | /usr/bin/sudo tee /etc/motd
 
+echo if needed for intel igpu, add to /etc/grub/default commandline: i915.enable_psr=0
+
 echo reboot, login, startx
