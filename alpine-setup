@@ -22,27 +22,27 @@ fi
 
 # setup hostname
 if [ "$(cat /etc/hostname)" = "alpine" ]; then
-    /usr/bin/sudo setup-hostname
+    sudo setup-hostname
 fi
 
 # setup timezone
 if [ ! -f /etc/localtime ]; then
-    /usr/bin/sudo setup-timezone
+    sudo setup-timezone
 fi
 
 # setup sshd
 if ! which ssh &>/dev/null; then
-    /usr/bin/sudo setup-sshd
+    sudo setup-sshd
 fi
 
 # setup ntp
 if ! which chronyd &>/dev/null; then
-    /usr/bin/sudo setup-ntp chrony
+    sudo setup-ntp chrony
 fi
 
 # setup xorg base
 if ! which startx &>/dev/null; then
-    /usr/bin/sudo setup-xorg-base
+    sudo setup-xorg-base
 fi
 
 # setup apk repos
@@ -50,18 +50,18 @@ echo '
 https://dl-cdn.alpinelinux.org/alpine/edge/main
 https://dl-cdn.alpinelinux.org/alpine/edge/community
 https://dl-cdn.alpinelinux.org/alpine/edge/testing
-' | /usr/bin/sudo tee /etc/apk/repositories
+' | sudo tee /etc/apk/repositories
 
 
 # on first run, update and upgrade except kernel since /boot needs to move out large files before upgrade
 if [ ! -f ~/.bashrc ]; then
-    /usr/bin/sudo apk update
-    /usr/bin/sudo apk upgrade -a --ignore linux*
+    sudo apk update
+    sudo apk upgrade -a --ignore linux*
 fi
 
 # install packages
 if [ ! -f ~/.bashrc ]; then
-    /usr/bin/sudo apk add \
+    sudo apk add \
                   abuild \
                   acpi \
                   alpine-sdk \
@@ -175,12 +175,12 @@ fi
 
 # install nerd font inconsolata
 if [ ! -d /usr/share/fonts/inconsolata-nerd ]; then
-    /usr/bin/sudo mkdir -p /usr/share/fonts/inconsolata-nerd
+    sudo mkdir -p /usr/share/fonts/inconsolata-nerd
     cd /usr/share/fonts/inconsolata-nerd
-    /usr/bin/sudo rm -fv *
-    /usr/bin/sudo wget https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Inconsolata.zip
-    /usr/bin/sudo unzip Inconsolata.zip
-    /usr/bin/sudo rm -v Inconsolata.zip
+    sudo rm -fv *
+    sudo wget https://github.com/ryanoasis/nerd-fonts/releases/download/2.2.0-RC/Inconsolata.zip
+    sudo unzip Inconsolata.zip
+    sudo rm -v Inconsolata.zip
     fc-cache -rfv
 fi
 
@@ -188,7 +188,7 @@ fi
 if [ ! -f ~/.bashrc ]; then
     curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/limits.sh | bash
     curl --fail --no-progress-meter https://raw.githubusercontent.com/nathants/bootstraps/6b4127456411dba7e7db5f9416ea5a57df1d254e/sshd.sh | bash
-    /usr/bin/sudo rc-service sshd stop
+    sudo rc-service sshd stop
 fi
 
 # set cgroups v2
@@ -212,8 +212,8 @@ fi
 
 # setup bashrc git
 if [ ! -f /usr/share/git/completion/git-prompt.sh ]; then
-    /usr/bin/sudo mkdir -p /usr/share/git/completion
-    curl https://raw.githubusercontent.com/git/git/9bf691b78cf906751e65d65ba0c6ffdcd9a5a12c/contrib/completion/git-prompt.sh | /usr/bin/sudo tee /usr/share/git/completion/git-prompt.sh
+    sudo mkdir -p /usr/share/git/completion
+    curl https://raw.githubusercontent.com/git/git/9bf691b78cf906751e65d65ba0c6ffdcd9a5a12c/contrib/completion/git-prompt.sh | sudo tee /usr/share/git/completion/git-prompt.sh
 fi
 
 # setup python3
@@ -288,7 +288,7 @@ git checkout 35633d45672d14bd798c478c45d1a17064701aa9
 agr -y nogroup nobody
 sed -i '/XBell/d' slock.c
 make
-/usr/bin/sudo make install
+sudo make install
 
 # install dwm
 cd ~/opt
@@ -601,7 +601,7 @@ EOF
 patch -p1 < $tmp
 make clean
 make
-/usr/bin/sudo make install
+sudo make install
 
 # install dmenu
 cd ~/opt
@@ -633,7 +633,7 @@ EOF
 patch -p1 < $tmp
 make clean
 make
-/usr/bin/sudo make install
+sudo make install
 
 # install st
 cd ~/opt
@@ -684,27 +684,27 @@ EOF
 patch -p1 < $tmp
 make clean
 make
-/usr/bin/sudo make install
+sudo make install
 
 # setup usb udev
-echo 'SUBSYSTEM=="usb", MODE="0666"' | /usr/bin/sudo tee /etc/udev/rules.d/usb.rules
+echo 'SUBSYSTEM=="usb", MODE="0666"' | sudo tee /etc/udev/rules.d/usb.rules
 
 # setup abuild
-/usr/bin/sudo addgroup $USER abuild
+sudo addgroup $USER abuild
 
 # setup plugdev
-/usr/bin/sudo addgroup $USER plugdev
+sudo addgroup $USER plugdev
 
 # setup xorg
-/usr/bin/sudo addgroup $USER video
-/usr/bin/sudo addgroup $USER input
+sudo addgroup $USER video
+sudo addgroup $USER input
 if ! cat /etc/X11/xorg.conf | grep DontZap; then
 echo '
 Section "ServerFlags"
     Option "DontVTSwitch" "True"
     Option "DontZap"      "True"
 EndSection
-' | /usr/bin/sudo tee -a /etc/X11/xorg.conf
+' | sudo tee -a /etc/X11/xorg.conf
 fi
 
 # setup gpg notifier
@@ -735,10 +735,10 @@ else
     echo gpg invoked: "$@" 1>&2
     /usr/bin/gpg "$@"
 fi
-' | /usr/bin/sudo tee /usr/local/bin/gpg
-/usr/bin/sudo cp /usr/local/bin/gpg /usr/local/bin/gpg2
-/usr/bin/sudo chmod +x /usr/local/bin/gpg
-/usr/bin/sudo chmod +x /usr/local/bin/gpg2
+' | sudo tee /usr/local/bin/gpg
+sudo cp /usr/local/bin/gpg /usr/local/bin/gpg2
+sudo chmod +x /usr/local/bin/gpg
+sudo chmod +x /usr/local/bin/gpg2
 
 # setup sudo notifier
 echo '#!/bin/bash
@@ -755,21 +755,21 @@ if [ root != "$(whoami)" ]; then
     echo "$auth_log" > $auth_file
     if cat $auth_file | grep "${cmdline}$" &>/dev/null; then
       echo sudo invoked: "$@" 1>&2
-      /usr/bin/sudo "$@"
+      sudo "$@"
     elif st notify -p "sudo: $cmdline" &>/dev/null; then
       echo $(now) "$cmdline" >> $auth_file
       echo sudo invoked: "$@" 1>&2
-      /usr/bin/sudo "$@"
+      sudo "$@"
     else
       echo fatal: sudo access denied by user prompt
       exit 1
     fi
 else
     echo sudo invoked: "$@" 1>&2
-    /usr/bin/sudo "$@"
+    sudo "$@"
 fi
-' | /usr/bin/sudo tee /usr/local/bin/sudo
-/usr/bin/sudo chmod +x /usr/local/bin/sudo
+' | sudo tee /usr/local/bin/sudo
+sudo chmod +x /usr/local/bin/sudo
 
 # setup xmodmap
 echo '
@@ -795,17 +795,17 @@ echo '
 ' > ~/.xinitrc
 
 # setup suspend on lid close
-/usr/bin/sudo mkdir -p /etc/acpi/LID
+sudo mkdir -p /etc/acpi/LID
 echo "#!/bin/sh
 DISPLAY=:0 su $USER -c slock &
 echo mem > /sys/power/state
-" | /usr/bin/sudo tee /etc/acpi/LID/00000080
-/usr/bin/sudo chmod +x /etc/acpi/LID/00000080
-/usr/bin/sudo rc-service acpid restart
-/usr/bin/sudo rc-update add acpid
+" | sudo tee /etc/acpi/LID/00000080
+sudo chmod +x /etc/acpi/LID/00000080
+sudo rc-service acpid restart
+sudo rc-update add acpid
 
 # clear motd
-echo | /usr/bin/sudo tee /etc/motd
+echo | sudo tee /etc/motd
 
 echo if needed for intel igpu, add to /etc/grub/default commandline: i915.enable_psr=0
 
